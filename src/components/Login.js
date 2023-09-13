@@ -1,8 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Header from "./Header";
+import { validateForm } from "../utils/validate";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  useDeviceLanguage,
+} from "firebase/auth";
+import { auth } from "../utils/firebase";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { addUser } from "../utils/userSlice";
 
 const Login = () => {
   const [isSignIn, setIsSignIn] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const name = useRef(null);
+  const email = useRef(null);
+  const password = useRef(null);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const handleValidForm = () => {
+    const message = validateForm(email.current.value, password.current.value);
+    setErrorMessage(message);
+    if (message) return;
+    if (!isSignIn) {
+      createUserWithEmailAndPassword(
+        auth,
+        email.current.value,
+        password.current.value
+      )
+        .then((userCredential) => {
+          // Signed in
+          const user = userCredential.user;
+
+          updateProfile(user, {
+            displayName: name.current.value,
+            photoURL:
+              "https://tse3.mm.bing.net/th?id=OIP.HHVUf3TYqncgpJXyCMmxyAHaHa&pid=Api&P=0&h=180",
+          })
+            .then(() => {
+              // Profile updated!
+              // ...
+              const { uid, email, displayName, photoURL } = auth.currentUser;
+              dispatch(addUser({ uid, email, displayName, photoURL }));
+            })
+            .catch((error) => {
+              // An error occurred
+              // ...
+            });
+          console.log(user);
+          navigate("/browse");
+          // ...
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          setErrorMessage(errorMessage);
+        });
+    }
+  };
   return (
     <div>
       <Header />
@@ -21,22 +78,29 @@ const Login = () => {
         </h1>
         {!isSignIn && (
           <input
+            ref={name}
             type="text"
             placeholder="Name"
             className="py-2 px-4 w-full my-2 bg-neutral-800 rounded-md"
           />
         )}
         <input
+          ref={email}
           type="text"
           placeholder="Email address"
           className="py-2 px-4 w-full my-2 bg-neutral-800 rounded-md"
         />
         <input
+          ref={password}
           type="password"
           placeholder="Password"
           className="py-2 px-4 w-full my-2  bg-neutral-800 rounded-md"
         />
-        <button className="bg-red-800 py-2 px-4 w-full my-6 rounded-md">
+        <p className="text-red-600 font-semibold text-sm">{errorMessage}</p>
+        <button
+          className="bg-red-800 py-2 px-4 w-full my-6 rounded-md"
+          onClick={() => handleValidForm()}
+        >
           {isSignIn ? "Sign In" : "Sign Up "}
         </button>
         <p>
