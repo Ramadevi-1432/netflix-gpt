@@ -13,3 +13,12 @@ Netflix GPT
 - redux store, store provided
 - Signout implemented
 - Dispaly Name and photoUrl updated
+- user logged in redirect to browse page
+- user not logged in redirect to sign in page
+- unsubscribe when component unmounts
+- adding hardcoded data into the constants
+- get movies data and put into the store
+- built the movieTitle component
+- get trailer video from movielist api
+- filter the type === Trailer and put into the store
+- get the video and render in the Video container page

@@ -5,12 +5,13 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   updateProfile,
-  useDeviceLanguage,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import { auth } from "../utils/firebase";
-import { useNavigate } from "react-router-dom";
+
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
+import { BACKGROUND_IMAGE, imageUrl } from "../utils/constants";
 
 const Login = () => {
   const [isSignIn, setIsSignIn] = useState(true);
@@ -18,7 +19,7 @@ const Login = () => {
   const name = useRef(null);
   const email = useRef(null);
   const password = useRef(null);
-  const navigate = useNavigate();
+
   const dispatch = useDispatch();
   const handleValidForm = () => {
     const message = validateForm(email.current.value, password.current.value);
@@ -31,26 +32,34 @@ const Login = () => {
         password.current.value
       )
         .then((userCredential) => {
-          // Signed in
           const user = userCredential.user;
 
           updateProfile(user, {
             displayName: name.current.value,
-            photoURL:
-              "https://tse3.mm.bing.net/th?id=OIP.HHVUf3TYqncgpJXyCMmxyAHaHa&pid=Api&P=0&h=180",
+            photoURL: imageUrl(),
           })
             .then(() => {
-              // Profile updated!
-              // ...
               const { uid, email, displayName, photoURL } = auth.currentUser;
               dispatch(addUser({ uid, email, displayName, photoURL }));
             })
-            .catch((error) => {
-              // An error occurred
-              // ...
-            });
+            .catch((error) => {});
           console.log(user);
-          navigate("/browse");
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          setErrorMessage(errorMessage);
+        });
+    } else {
+      const auth = getAuth();
+      signInWithEmailAndPassword(
+        auth,
+        email.current.value,
+        password.current.value
+      )
+        .then((userCredential) => {
+          const user = userCredential.user;
+
           // ...
         })
         .catch((error) => {
@@ -64,10 +73,7 @@ const Login = () => {
     <div>
       <Header />
       <div className="absolute">
-        <img
-          src="https://assets.nflxext.com/ffe/siteui/vlv3/42df4e1f-bef6-499e-87ff-c990584de314/5e7c383c-1f88-4983-b4da-06e14c0984ba/IN-en-20230904-popsignuptwoweeks-perspective_alpha_website_small.jpg"
-          alt="bgimage"
-        />
+        <img src={BACKGROUND_IMAGE} alt="bgimage" />
       </div>
       <form
         className="bg-black absolute my-40 mx-auto right-0 left-0 w-1/4 p-12 bg-opacity-80 rounded-lg text-white"
@@ -104,12 +110,12 @@ const Login = () => {
           {isSignIn ? "Sign In" : "Sign Up "}
         </button>
         <p>
-          {isSignIn ? " Already a member?" : " New to Netflix?"}
+          {isSignIn ? " New to Netflix?" : " Already a member?"}
           <span
             className="text-red-600 cursor-pointer"
             onClick={() => setIsSignIn(!isSignIn)}
           >
-            {isSignIn ? " Sign In Now" : " Sign Up Now"}
+            {isSignIn ? " Sign Up Now " : " Sign In Now "}
           </span>
         </p>
       </form>
